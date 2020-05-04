@@ -17,5 +17,6 @@ void renderColorBuffer();
 void clearColorBuffer(uint32_t color);
 void drawGrid();
 void drawRect(int x, int y, int w, int h, uint32_t color);
+void drawPixel(int x, int y, uint32_t color);
 
 #endif

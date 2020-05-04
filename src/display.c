@@ -87,7 +87,17 @@ void drawRect(int x, int y, int w, int h, uint32_t color)
   {
     for(int i = 0; i < w; ++i )
     {
-      _colorBuffer[(screenWidth * (y + j) + (x+i))] = color;
+      int screenX = x + i;
+      int screenY = y + j;
+      //_colorBuffer[(screenWidth * (y + j) + (x+i))] = color;
+      drawPixel(screenX, screenY, color);
     }
   }
+}
+
+void drawPixel(int x, int y, uint32_t color)
+{
+  if(x < 0 || x > screenWidth || y < 0 || y > screenHeight) return;
+  
+  _colorBuffer[(screenWidth * y) + x] = color;
 }
