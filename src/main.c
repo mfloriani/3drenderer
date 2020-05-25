@@ -4,10 +4,10 @@
 #include <SDL2/SDL.h>
 #include "display.h"
 #include "vector.h"
+#include "mesh.h"
+#include "triangle.h"
 
-#define NUM_POINTS (9 * 9 * 9)
-vec3_t cube[NUM_POINTS];
-vec2_t projectedCube[NUM_POINTS];
+triangle_t trianglesToRender[N_MESH_FACES];
 
 vec3_t cameraPosition = {0, 0, -5};
 vec3_t cubeRotation = {0, 0, 0};
@@ -20,19 +20,6 @@ bool setup()
 {
   _colorBuffer = (uint32_t*) malloc(sizeof(uint32_t) * screenWidth * screenHeight);
   _colorBufferTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, screenWidth, screenHeight);
-
-  int pointIndex = 0;
-  for(float x = -1; x <= 1; x += 0.25)
-  {
-    for(float y = -1; y <= 1; y += 0.25)
-    {
-      for(float z = -1; z <= 1; z += 0.25)
-      {
-        vec3_t point = {.x = x, .y = y, .z = z};
-        cube[pointIndex++] = point;
-      }
-    }
-  }
 }
 
 void handleInput()
@@ -81,25 +68,47 @@ void update()
   cubeRotation.y += 0.01;
   cubeRotation.z += 0.01;
 
-  for(int i = 0; i < NUM_POINTS; ++i)
+  for(int i = 0; i < N_MESH_FACES; ++i)
   {
-    vec3_t transformedPoint = vec3RotateX(cube[i], cubeRotation.x);
-    transformedPoint = vec3RotateY(transformedPoint, cubeRotation.y);
-    transformedPoint = vec3RotateZ(transformedPoint, cubeRotation.z);
+    face_t meshFace = meshFaces[i];
 
-    transformedPoint.z -= cameraPosition.z;
+    vec3_t faceVertices[3];
+    faceVertices[0] = meshVertices[meshFace.a - 1];
+    faceVertices[1] = meshVertices[meshFace.b - 1];
+    faceVertices[2] = meshVertices[meshFace.c - 1];
 
-    projectedCube[i] = project(transformedPoint);
+    triangle_t projectedTriangle;
+
+    for(int j = 0; j < 3; ++j)
+    {
+      vec3_t transformedVertex = faceVertices[j];
+
+      transformedVertex = vec3RotateX(transformedVertex, cubeRotation.x);
+      transformedVertex = vec3RotateY(transformedVertex, cubeRotation.y);
+      transformedVertex = vec3RotateZ(transformedVertex, cubeRotation.z);
+
+      transformedVertex.z -= cameraPosition.z;
+
+      vec2_t projectedPoint = project(transformedVertex);
+      projectedPoint.x += (screenWidth/2);
+      projectedPoint.y += (screenHeight/2);
+
+      projectedTriangle.points[j] = projectedPoint;
+    }
+
+    trianglesToRender[i] = projectedTriangle;
   }
 }
 
 void render()
 {
-  for(int i=0; i < NUM_POINTS; ++i)
-  {
-    vec2_t point = projectedCube[i];
-    drawRect(point.x + (screenWidth/2), point.y + (screenHeight/2), 4, 4, 0xffffff00);
-  }
+   for(int i = 0; i < N_MESH_FACES; ++i)
+   {
+     triangle_t triangle = trianglesToRender[i];
+     drawRect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xffffff00);
+     drawRect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xffffff00);
+     drawRect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xffffff00);
+   }
 
   renderColorBuffer();
   clearColorBuffer(0xff000000);
