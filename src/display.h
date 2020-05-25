@@ -3,6 +3,9 @@
 
 #include <SDL2/SDL.h>
 
+#define FPS 30
+#define FRAME_LENGHT 1000 / FPS
+
 extern int screenWidth;
 extern int screenHeight;
 

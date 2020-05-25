@@ -14,6 +14,7 @@ vec3_t cubeRotation = {0, 0, 0};
 
 int fovFactor = 512;
 bool _running = true;
+int previousFrameTime = 0;
 
 bool setup()
 {
@@ -69,6 +70,13 @@ vec2_t project(vec3_t point)
 
 void update()
 {
+  int timeToWait = FRAME_LENGHT - (SDL_GetTicks() - previousFrameTime);
+  if(timeToWait > 0 && timeToWait <= FRAME_LENGHT)
+  {
+    SDL_Delay(timeToWait);
+  }
+  previousFrameTime = SDL_GetTicks();
+
   cubeRotation.x += 0.01;
   cubeRotation.y += 0.01;
   cubeRotation.z += 0.01;
