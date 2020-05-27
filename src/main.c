@@ -108,6 +108,13 @@ void render()
      drawRect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xffffff00);
      drawRect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xffffff00);
      drawRect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xffffff00);
+
+     drawTriangle(
+       triangle.points[0].x, triangle.points[0].y,
+       triangle.points[1].x, triangle.points[1].y,
+       triangle.points[2].x, triangle.points[2].y,
+       0xffffff00
+     );
    }
 
   renderColorBuffer();

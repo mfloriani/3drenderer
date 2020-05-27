@@ -1,6 +1,7 @@
 #include "display.h"
 #include <stdbool.h>
 #include <stdlib.h>
+#include <math.h>
 
 int screenWidth = 800;
 int screenHeight = 600;
@@ -100,4 +101,32 @@ void drawPixel(int x, int y, uint32_t color)
   if(x < 0 || x > screenWidth || y < 0 || y > screenHeight) return;
   
   _colorBuffer[(screenWidth * y) + x] = color;
+}
+
+void drawLine(int x0, int y0, int x1, int y1, uint32_t color)
+{
+  int deltaX = x1 - x0;
+  int deltaY = y1 - y0;
+
+  int sideLength = abs(deltaX) >= abs(deltaY) ? abs(deltaX) : abs(deltaY);
+
+  float xInc = deltaX / (float)sideLength;
+  float yInc = deltaY / (float)sideLength;
+
+  float currentX = x0;
+  float currentY = y0;
+
+  for(int i = 0; i <= sideLength; ++i)
+  {
+    drawPixel(round(currentX), round(currentY), color);
+    currentX += xInc;
+    currentY += yInc;
+  }
+}
+
+void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color)
+{
+  drawLine(x0, y0, x1, y1, color);
+  drawLine(x1, y1, x2, y2, color);
+  drawLine(x2, y2, x0, y0, color);
 }
