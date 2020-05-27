@@ -44,7 +44,6 @@ int init()
 void quit()
 {
   SDL_DestroyTexture(_colorBufferTexture);
-  free(_colorBuffer);
   SDL_DestroyRenderer(_renderer);
   SDL_DestroyWindow(_window);
   SDL_Quit();

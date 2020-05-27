@@ -4,10 +4,15 @@
 #include "vector.h"
 #include "triangle.h"
 
-#define N_MESH_VERTICES 8
-extern vec3_t meshVertices[N_MESH_VERTICES];
+void loadObjFileData(char* filename);
 
-#define N_MESH_FACES 6 * 2
-extern face_t meshFaces[N_MESH_FACES];
+typedef struct
+{
+  vec3_t* vertices;
+  face_t* faces;
+  vec3_t  rotation;
+} mesh_t;
+
+extern mesh_t mesh;
 
 #endif

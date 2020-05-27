@@ -1,27 +1,43 @@
 #include "mesh.h"
+#include "array.h"
+#include <stdio.h>
+#include <string.h>
 
-vec3_t meshVertices[N_MESH_VERTICES] = {
-  { -1, -1, -1 }, //1
-  { -1,  1, -1 }, //2
-  {  1,  1, -1 }, //3
-  {  1, -1, -1 }, //4
-  {  1,  1,  1 }, //5
-  {  1, -1,  1 }, //6
-  { -1,  1,  1 }, //7
-  { -1, -1,  1 }, //8
+mesh_t mesh = {
+  .vertices = NULL,
+  .faces = NULL,
+  .rotation = {0,0,0}
 };
 
-face_t meshFaces[N_MESH_FACES] = {
-  { 1, 2, 3 },//front
-  { 1, 3, 4 },
-  { 4, 3, 5 },//right
-  { 4, 5, 6 },
-  { 6, 5, 7 },//back
-  { 6, 7, 8 },
-  { 8, 7, 2 },//left
-  { 8, 2, 1 },
-  { 2, 7, 5 },//top
-  { 2, 5, 3 },
-  { 6, 8, 1 },//bottom
-  { 6, 1, 4 },
-};
+void loadObjFileData(char* filename)
+{
+  FILE* file = fopen(filename, "r");
+  
+  char line[1024];
+  while(fgets(line, 1024, file))
+  {
+    if(strncmp(line, "v ", 2) == 0)
+    {
+      vec3_t vertex;
+      sscanf(line, "v %f %f %f", &vertex.x, &vertex.y, &vertex.z);
+      array_push(mesh.vertices, vertex);
+    }
+    if(strncmp(line, "f ", 2) == 0)
+    {
+      int vertextIndeces[3];
+      int textureIndeces[3];
+      int normalIndeces[3];
+      sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
+        &vertextIndeces[0], &textureIndeces[0], &normalIndeces[0],
+        &vertextIndeces[1], &textureIndeces[1], &normalIndeces[1],
+        &vertextIndeces[2], &textureIndeces[2], &normalIndeces[2]
+      );
+
+      face_t face;
+      face.a = vertextIndeces[0];
+      face.b = vertextIndeces[1];
+      face.c = vertextIndeces[2];
+      array_push(mesh.faces, face);
+    }
+  }
+}
