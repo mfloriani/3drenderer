@@ -6,6 +6,20 @@
 #define FPS 30
 #define FRAME_LENGHT 1000 / FPS
 
+enum cullMethod
+{
+  CULL_NONE,
+  CULL_BACKFACE
+} cullMethod;
+
+enum renderMethod
+{
+  RENDER_WIRE,
+  RENDER_WIRE_VERTEX,
+  RENDER_FILL_TRIANGLE,
+  RENDER_FILL_TRIANGLE_WIRE
+} renderMethod;
+
 extern int screenWidth;
 extern int screenHeight;
 
