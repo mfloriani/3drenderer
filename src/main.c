@@ -10,7 +10,7 @@
 
 triangle_t* trianglesToRender = NULL;
 
-vec3_t cameraPosition = {0, 0, -5};
+vec3_t cameraPosition = {0, 0, 0};
 
 int fovFactor = 512;
 bool _running = true;
@@ -82,8 +82,7 @@ void update()
     faceVertices[1] = mesh.vertices[meshFace.b - 1];
     faceVertices[2] = mesh.vertices[meshFace.c - 1];
 
-    triangle_t projectedTriangle;
-
+    vec3_t transformedVertices[3];
     for(int j = 0; j < 3; ++j)
     {
       vec3_t transformedVertex = faceVertices[j];
@@ -92,9 +91,33 @@ void update()
       transformedVertex = vec3RotateY(transformedVertex, mesh.rotation.y);
       transformedVertex = vec3RotateZ(transformedVertex, mesh.rotation.z);
 
-      transformedVertex.z -= cameraPosition.z;
+      transformedVertex.z += 5;
 
-      vec2_t projectedPoint = project(transformedVertex);
+      transformedVertices[j] = transformedVertex;
+    }
+
+    //Culling faces
+    vec3_t vecA = transformedVertices[0];
+    vec3_t vecB = transformedVertices[1];
+    vec3_t vecC = transformedVertices[2];
+
+    vec3_t vecAB = vec3Sub(vecB, vecA);
+    vec3_t vecAC = vec3Sub(vecC, vecA);
+    vecAB = vec3Normalize(vecAB);
+    vecAC = vec3Normalize(vecAC);
+
+    vec3_t normal = vec3Cross(vecAB, vecAC);
+    normal = vec3Normalize(normal);
+
+    vec3_t cameraRay = vec3Sub(cameraPosition, vecA);
+
+    float dotNormalCamera = vec3Dot(normal, cameraRay);
+    if (dotNormalCamera < 0) continue;
+
+    triangle_t projectedTriangle;
+    for(int j = 0; j < 3; ++j)
+    {      
+      vec2_t projectedPoint = project(transformedVertices[j]);
       projectedPoint.x += (screenWidth/2);
       projectedPoint.y += (screenHeight/2);
 
