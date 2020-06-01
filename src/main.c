@@ -165,6 +165,9 @@ void update()
       //scale into the view
       projectedPoints[j].x *= (screenWidth / 2.0);
       projectedPoints[j].y *= (screenHeight / 2.0);
+
+      //fix inverted y orientation
+      projectedPoints[j].y *= -1;
       
       //translate to the middle of the screen
       projectedPoints[j].x += (screenWidth / 2.0);
