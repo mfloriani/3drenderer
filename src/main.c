@@ -155,17 +155,36 @@ void update()
 
     }
 
+    float avgDepth = (transformedVertices[0].z + transformedVertices[1].z + transformedVertices[2].z) / 3.0;
+
     triangle_t projectedTriangle = {
       .points = {
         { projectedPoints[0].x, projectedPoints[0].y },
         { projectedPoints[1].x, projectedPoints[1].y },
         { projectedPoints[2].x, projectedPoints[2].y },
       },
-      .color = meshFace.color
+      .color = meshFace.color,
+      .avgDepth = avgDepth
     };
 
     array_push(trianglesToRender, projectedTriangle);
   }
+
+  int numTriangles = array_length(trianglesToRender);
+  for(int i = 0; i < numTriangles; ++i)
+  {
+    for(int j = i; j < numTriangles; ++j)
+    {
+      if(trianglesToRender[i].avgDepth < trianglesToRender[j].avgDepth)
+      {
+        triangle_t tmp = trianglesToRender[i];
+        trianglesToRender[i] = trianglesToRender[j];
+        trianglesToRender[j] = tmp;
+      }
+    }
+  }
+
+
 }
 
 void render()
