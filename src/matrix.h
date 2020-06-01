@@ -17,6 +17,7 @@ mat4_t mat4_makeTranslation(float tx, float ty, float tz);
 mat4_t mat4_makeRotationX(float angle);
 mat4_t mat4_makeRotationY(float angle);
 mat4_t mat4_makeRotationZ(float angle);
-
+mat4_t mat4_makePerspective(float fov, float aspect, float znear, float zfar);
+vec4_t mat4_mulVec4Projection(mat4_t projectionMatrix, vec4_t v);
 
 #endif

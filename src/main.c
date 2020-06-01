@@ -12,8 +12,8 @@
 triangle_t *trianglesToRender = NULL;
 
 vec3_t cameraPosition = {0, 0, 0};
+mat4_t projectionMatrix;
 
-int fovFactor = 640;
 bool _running = true;
 int previousFrameTime = 0;
 
@@ -24,6 +24,12 @@ bool setup()
 
   _colorBuffer = (uint32_t *)malloc(sizeof(uint32_t) * screenWidth * screenHeight);
   _colorBufferTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, screenWidth, screenHeight);
+
+  float fov = M_PI/3; // 180/3 or 60deg
+  float aspect = (float)screenHeight / (float)screenWidth;
+  float znear = 0.1;
+  float zfar = 100.0;
+  projectionMatrix = mat4_makePerspective(fov, aspect, znear, zfar);
 
   //loadObjFileData("./assets/cube.obj");
   load_cube_mesh_data();
@@ -77,14 +83,6 @@ void handleInput()
   }
 }
 
-vec2_t project(vec3_t point)
-{
-  vec2_t projectedPoint = {
-      (point.x * fovFactor) / point.z,
-      (point.y * fovFactor) / point.z};
-  return projectedPoint;
-}
-
 void update()
 {
   int timeToWait = FRAME_LENGHT - (SDL_GetTicks() - previousFrameTime);
@@ -100,10 +98,10 @@ void update()
   mesh.rotation.y += 0.01;
   mesh.rotation.z += 0.01;
   
-  mesh.scale.x += 0.002;
-  mesh.scale.y += 0.001;
+  // mesh.scale.x += 0.002;
+  // mesh.scale.y += 0.001;
 
-  mesh.translation.x += 0.01;
+  // mesh.translation.x += 0.01;
   mesh.translation.z = 5;
   
   mat4_t scaleMatrix = mat4_makeScale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
@@ -159,13 +157,19 @@ void update()
       if (dotNormalCamera < 0) continue;
     }
 
-    vec2_t projectedPoints[3];
+    vec4_t projectedPoints[3];
 
     for (int j = 0; j < 3; ++j)
     {
-      projectedPoints[j] = project(vec3_fromVec4(transformedVertices[j]));
-      projectedPoints[j].x += (screenWidth / 2);
-      projectedPoints[j].y += (screenHeight / 2);
+      projectedPoints[j] = mat4_mulVec4Projection(projectionMatrix, transformedVertices[j]);
+      
+      //scale into the view
+      projectedPoints[j].x *= (screenWidth / 2.0);
+      projectedPoints[j].y *= (screenHeight / 2.0);
+      
+      //translate to the middle of the screen
+      projectedPoints[j].x += (screenWidth / 2.0);
+      projectedPoints[j].y += (screenHeight / 2.0);
     }
 
     float avgDepth = (transformedVertices[0].z + transformedVertices[1].z + transformedVertices[2].z) / 3.0;
