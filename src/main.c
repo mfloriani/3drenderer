@@ -8,6 +8,7 @@
 #include "triangle.h"
 #include "array.h"
 #include "matrix.h"
+#include "light.h"
 
 triangle_t *trianglesToRender = NULL;
 
@@ -31,8 +32,8 @@ bool setup()
   float zfar = 100.0;
   projectionMatrix = mat4_makePerspective(fov, aspect, znear, zfar);
 
-  //loadObjFileData("./assets/cube.obj");
-  load_cube_mesh_data();
+  loadObjFileData("./assets/f22.obj");
+  // load_cube_mesh_data();
 }
 
 void handleInput()
@@ -95,8 +96,8 @@ void update()
   trianglesToRender = NULL;
 
   mesh.rotation.x += 0.01;
-  mesh.rotation.y += 0.01;
-  mesh.rotation.z += 0.01;
+  // mesh.rotation.y += 0.03;
+  // mesh.rotation.z += 0.04;
   
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
@@ -135,27 +136,25 @@ void update()
       transformedVertex = mat4_mulVec4(worldMatrix, transformedVertex);
       transformedVertices[j] = transformedVertex;
     }
+  
+    //Culling faces
+    vec3_t vecA = vec3_fromVec4(transformedVertices[0]);
+    vec3_t vecB = vec3_fromVec4(transformedVertices[1]);
+    vec3_t vecC = vec3_fromVec4(transformedVertices[2]);
 
-    if (cullMethod == CULL_BACKFACE)
-    {
-      //Culling faces
-      vec3_t vecA = vec3_fromVec4(transformedVertices[0]);
-      vec3_t vecB = vec3_fromVec4(transformedVertices[1]);
-      vec3_t vecC = vec3_fromVec4(transformedVertices[2]);
+    vec3_t vecAB = vec3Sub(vecB, vecA);
+    vec3_t vecAC = vec3Sub(vecC, vecA);
+    vecAB = vec3Normalize(vecAB);
+    vecAC = vec3Normalize(vecAC);
 
-      vec3_t vecAB = vec3Sub(vecB, vecA);
-      vec3_t vecAC = vec3Sub(vecC, vecA);
-      vecAB = vec3Normalize(vecAB);
-      vecAC = vec3Normalize(vecAC);
+    vec3_t normal = vec3Cross(vecAB, vecAC);
+    normal = vec3Normalize(normal);
 
-      vec3_t normal = vec3Cross(vecAB, vecAC);
-      normal = vec3Normalize(normal);
+    vec3_t cameraRay = vec3Sub(cameraPosition, vecA);
 
-      vec3_t cameraRay = vec3Sub(cameraPosition, vecA);
+    float dotNormalCamera = vec3Dot(normal, cameraRay);
 
-      float dotNormalCamera = vec3Dot(normal, cameraRay);
-      if (dotNormalCamera < 0) continue;
-    }
+    if (cullMethod == CULL_BACKFACE && dotNormalCamera < 0) continue;
 
     vec4_t projectedPoints[3];
 
@@ -174,13 +173,17 @@ void update()
 
     float avgDepth = (transformedVertices[0].z + transformedVertices[1].z + transformedVertices[2].z) / 3.0;
 
+    float lightIntensityFactor = -vec3Dot(normal, light.direction);
+
+    uint32_t triangleColor = light_applyIntensity(meshFace.color, lightIntensityFactor);
+
     triangle_t projectedTriangle = {
         .points = {
             {projectedPoints[0].x, projectedPoints[0].y},
             {projectedPoints[1].x, projectedPoints[1].y},
             {projectedPoints[2].x, projectedPoints[2].y},
         },
-        .color = meshFace.color,
+        .color = triangleColor,
         .avgDepth = avgDepth};
 
     array_push(trianglesToRender, projectedTriangle);

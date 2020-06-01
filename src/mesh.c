@@ -35,10 +35,12 @@ void loadObjFileData(char* filename)
         &vertexIndeces[2], &textureIndeces[2], &normalIndeces[2]
       );
 
-      face_t face;
-      face.a = vertexIndeces[0];
-      face.b = vertexIndeces[1];
-      face.c = vertexIndeces[2];
+      face_t face = {
+        .a = vertexIndeces[0],
+        .b = vertexIndeces[1],
+        .c = vertexIndeces[2],
+        .color = 0xffffffff
+      };
       array_push(mesh.faces, face);
     }
   }
@@ -57,23 +59,23 @@ vec3_t cube_vertices[N_CUBE_VERTICES] = {
 
 face_t cube_faces[N_CUBE_FACES] = {
     // front
-    { .a = 1, .b = 2, .c = 3, .color = 0xffff0000 },
-    { .a = 1, .b = 3, .c = 4, .color = 0xffff0000 },
+    { .a = 1, .b = 2, .c = 3, .color = 0xffffffff },
+    { .a = 1, .b = 3, .c = 4, .color = 0xffffffff },
     // right
-    { .a = 4, .b = 3, .c = 5, .color = 0xff00ff00 },
-    { .a = 4, .b = 5, .c = 6, .color = 0xff00ff00 },
+    { .a = 4, .b = 3, .c = 5, .color = 0xffffffff },
+    { .a = 4, .b = 5, .c = 6, .color = 0xffffffff },
     // back
-    { .a = 6, .b = 5, .c = 7, .color = 0xff0000ff },
-    { .a = 6, .b = 7, .c = 8, .color = 0xff0000ff },
+    { .a = 6, .b = 5, .c = 7, .color = 0xffffffff },
+    { .a = 6, .b = 7, .c = 8, .color = 0xffffffff },
     // left
-    { .a = 8, .b = 7, .c = 2, .color = 0xffffff00 },
-    { .a = 8, .b = 2, .c = 1, .color = 0xffffff00 },
+    { .a = 8, .b = 7, .c = 2, .color = 0xffffffff },
+    { .a = 8, .b = 2, .c = 1, .color = 0xffffffff },
     // top
     { .a = 2, .b = 7, .c = 5, .color = 0xffffffff },
     { .a = 2, .b = 5, .c = 3, .color = 0xffffffff },
     // bottom
-    { .a = 6, .b = 8, .c = 1, .color = 0xff0ffff0 },
-    { .a = 6, .b = 1, .c = 4, .color = 0xff0ffff0 },
+    { .a = 6, .b = 8, .c = 1, .color = 0xffffffff },
+    { .a = 6, .b = 1, .c = 4, .color = 0xffffffff },
 };
 
 void load_cube_mesh_data(void) {
