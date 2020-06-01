@@ -7,12 +7,13 @@
 #include "mesh.h"
 #include "triangle.h"
 #include "array.h"
+#include "matrix.h"
 
 triangle_t *trianglesToRender = NULL;
 
 vec3_t cameraPosition = {0, 0, 0};
 
-int fovFactor = 512;
+int fovFactor = 640;
 bool _running = true;
 int previousFrameTime = 0;
 
@@ -98,6 +99,18 @@ void update()
   mesh.rotation.x += 0.01;
   mesh.rotation.y += 0.01;
   mesh.rotation.z += 0.01;
+  
+  mesh.scale.x += 0.002;
+  mesh.scale.y += 0.001;
+
+  mesh.translation.x += 0.01;
+  mesh.translation.z = 5;
+  
+  mat4_t scaleMatrix = mat4_makeScale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
+  mat4_t translationMatrix = mat4_makeTranslation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
+  mat4_t rotationMatrixX = mat4_makeRotationX(mesh.rotation.x);
+  mat4_t rotationMatrixY = mat4_makeRotationY(mesh.rotation.y);
+  mat4_t rotationMatrixZ = mat4_makeRotationZ(mesh.rotation.z);
 
   int numFaces = array_length(mesh.faces);
   for (int i = 0; i < numFaces; ++i)
@@ -109,26 +122,28 @@ void update()
     faceVertices[1] = mesh.vertices[meshFace.b - 1];
     faceVertices[2] = mesh.vertices[meshFace.c - 1];
 
-    vec3_t transformedVertices[3];
+    vec4_t transformedVertices[3];
     for (int j = 0; j < 3; ++j)
     {
-      vec3_t transformedVertex = faceVertices[j];
+      vec4_t transformedVertex = vec4_fromVec3(faceVertices[j]);
+      
+      mat4_t worldMatrix = mat4_identity();
+      worldMatrix = mat4_mulMat4(scaleMatrix, worldMatrix);
+      worldMatrix = mat4_mulMat4(rotationMatrixX, worldMatrix);
+      worldMatrix = mat4_mulMat4(rotationMatrixY, worldMatrix);
+      worldMatrix = mat4_mulMat4(rotationMatrixZ, worldMatrix);
+      worldMatrix = mat4_mulMat4(translationMatrix, worldMatrix);      
 
-      transformedVertex = vec3RotateX(transformedVertex, mesh.rotation.x);
-      transformedVertex = vec3RotateY(transformedVertex, mesh.rotation.y);
-      transformedVertex = vec3RotateZ(transformedVertex, mesh.rotation.z);
-
-      transformedVertex.z += 5;
-
+      transformedVertex = mat4_mulVec4(worldMatrix, transformedVertex);
       transformedVertices[j] = transformedVertex;
     }
 
-    if(cullMethod == CULL_BACKFACE)
+    if (cullMethod == CULL_BACKFACE)
     {
       //Culling faces
-      vec3_t vecA = transformedVertices[0];
-      vec3_t vecB = transformedVertices[1];
-      vec3_t vecC = transformedVertices[2];
+      vec3_t vecA = vec3_fromVec4(transformedVertices[0]);
+      vec3_t vecB = vec3_fromVec4(transformedVertices[1]);
+      vec3_t vecC = vec3_fromVec4(transformedVertices[2]);
 
       vec3_t vecAB = vec3Sub(vecB, vecA);
       vec3_t vecAC = vec3Sub(vecC, vecA);
@@ -144,38 +159,35 @@ void update()
       if (dotNormalCamera < 0) continue;
     }
 
-    
     vec2_t projectedPoints[3];
 
     for (int j = 0; j < 3; ++j)
     {
-      projectedPoints[j] = project(transformedVertices[j]);
+      projectedPoints[j] = project(vec3_fromVec4(transformedVertices[j]));
       projectedPoints[j].x += (screenWidth / 2);
       projectedPoints[j].y += (screenHeight / 2);
-
     }
 
     float avgDepth = (transformedVertices[0].z + transformedVertices[1].z + transformedVertices[2].z) / 3.0;
 
     triangle_t projectedTriangle = {
-      .points = {
-        { projectedPoints[0].x, projectedPoints[0].y },
-        { projectedPoints[1].x, projectedPoints[1].y },
-        { projectedPoints[2].x, projectedPoints[2].y },
-      },
-      .color = meshFace.color,
-      .avgDepth = avgDepth
-    };
+        .points = {
+            {projectedPoints[0].x, projectedPoints[0].y},
+            {projectedPoints[1].x, projectedPoints[1].y},
+            {projectedPoints[2].x, projectedPoints[2].y},
+        },
+        .color = meshFace.color,
+        .avgDepth = avgDepth};
 
     array_push(trianglesToRender, projectedTriangle);
   }
 
   int numTriangles = array_length(trianglesToRender);
-  for(int i = 0; i < numTriangles; ++i)
+  for (int i = 0; i < numTriangles; ++i)
   {
-    for(int j = i; j < numTriangles; ++j)
+    for (int j = i; j < numTriangles; ++j)
     {
-      if(trianglesToRender[i].avgDepth < trianglesToRender[j].avgDepth)
+      if (trianglesToRender[i].avgDepth < trianglesToRender[j].avgDepth)
       {
         triangle_t tmp = trianglesToRender[i];
         trianglesToRender[i] = trianglesToRender[j];
@@ -183,38 +195,36 @@ void update()
       }
     }
   }
-
-
 }
 
 void render()
 {
+  SDL_RenderClear(_renderer);
+
   int numTriangles = array_length(trianglesToRender);
   for (int i = 0; i < numTriangles; ++i)
   {
     triangle_t triangle = trianglesToRender[i];
 
-    if(renderMethod == RENDER_FILL_TRIANGLE || renderMethod == RENDER_FILL_TRIANGLE_WIRE)
+    if (renderMethod == RENDER_FILL_TRIANGLE || renderMethod == RENDER_FILL_TRIANGLE_WIRE)
     {
       drawFilledTriangle(
           triangle.points[0].x, triangle.points[0].y,
           triangle.points[1].x, triangle.points[1].y,
           triangle.points[2].x, triangle.points[2].y,
-          triangle.color
-      );
+          triangle.color);
     }
 
-    if(renderMethod == RENDER_WIRE || renderMethod == RENDER_WIRE_VERTEX || renderMethod == RENDER_FILL_TRIANGLE_WIRE)
+    if (renderMethod == RENDER_WIRE || renderMethod == RENDER_WIRE_VERTEX || renderMethod == RENDER_FILL_TRIANGLE_WIRE)
     {
       drawTriangle(
           triangle.points[0].x, triangle.points[0].y,
           triangle.points[1].x, triangle.points[1].y,
           triangle.points[2].x, triangle.points[2].y,
-          0xffff0000
-      );
+          0xffff0000);
     }
 
-    if(renderMethod == RENDER_WIRE_VERTEX)
+    if (renderMethod == RENDER_WIRE_VERTEX)
     {
       drawRect(triangle.points[0].x - 3, triangle.points[0].y - 3, 6, 6, 0xffff0000);
       drawRect(triangle.points[1].x - 3, triangle.points[1].y - 3, 6, 6, 0xffff0000);
@@ -223,10 +233,8 @@ void render()
   }
 
   array_free(trianglesToRender);
-
   renderColorBuffer();
   clearColorBuffer(0xff000000);
-
   SDL_RenderPresent(_renderer);
 }
 

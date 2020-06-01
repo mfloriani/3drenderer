@@ -6,7 +6,9 @@
 mesh_t mesh = {
   .vertices = NULL,
   .faces = NULL,
-  .rotation = {0,0,0}
+  .rotation = {0,0,0},
+  .scale = { 1.0, 1.0, 1.0 },
+  .translation = {0,0,0}
 };
 
 void loadObjFileData(char* filename)
@@ -24,19 +26,19 @@ void loadObjFileData(char* filename)
     }
     if(strncmp(line, "f ", 2) == 0)
     {
-      int vertextIndeces[3];
+      int vertexIndeces[3];
       int textureIndeces[3];
       int normalIndeces[3];
       sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
-        &vertextIndeces[0], &textureIndeces[0], &normalIndeces[0],
-        &vertextIndeces[1], &textureIndeces[1], &normalIndeces[1],
-        &vertextIndeces[2], &textureIndeces[2], &normalIndeces[2]
+        &vertexIndeces[0], &textureIndeces[0], &normalIndeces[0],
+        &vertexIndeces[1], &textureIndeces[1], &normalIndeces[1],
+        &vertexIndeces[2], &textureIndeces[2], &normalIndeces[2]
       );
 
       face_t face;
-      face.a = vertextIndeces[0];
-      face.b = vertextIndeces[1];
-      face.c = vertextIndeces[2];
+      face.a = vertexIndeces[0];
+      face.b = vertexIndeces[1];
+      face.c = vertexIndeces[2];
       array_push(mesh.faces, face);
     }
   }

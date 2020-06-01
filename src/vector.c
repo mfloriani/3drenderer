@@ -61,9 +61,9 @@ vec3_t vec3RotateX(vec3_t v, float angle)
 vec3_t vec3RotateY(vec3_t v, float angle)
 {
   vec3_t rotatedVector = {
-    v.x * cos(angle) - v.z * sin(angle),
+    v.x * cos(angle) + v.z * sin(angle),
     v.y,
-    v.x * sin(angle) + v.z * cos(angle),
+   -v.x * sin(angle) + v.z * cos(angle),
   };
   return rotatedVector;
 }
@@ -129,5 +129,19 @@ vec3_t vec3Normalize(vec3_t v)
     .y = v.y / length,
     .z = v.z / length
   };
+  return result;
+}
+
+vec3_t vec3_fromVec4(vec4_t v)
+{
+  vec3_t result = { v.x, v.y, v.z};
+  return result;
+}
+
+//4D VECTOR
+
+vec4_t vec4_fromVec3(vec3_t v)
+{
+  vec4_t result = { v.x, v.y, v.z, 1.0 };
   return result;
 }
