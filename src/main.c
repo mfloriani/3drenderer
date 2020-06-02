@@ -9,6 +9,7 @@
 #include "array.h"
 #include "matrix.h"
 #include "light.h"
+#include "texture.h"
 
 triangle_t *trianglesToRender = NULL;
 
@@ -32,8 +33,12 @@ bool setup()
   float zfar = 100.0;
   projectionMatrix = mat4_makePerspective(fov, aspect, znear, zfar);
 
-  loadObjFileData("./assets/f22.obj");
-  // load_cube_mesh_data();
+  meshTexture = (uint32_t*)REDBRICK_TEXTURE;
+  textureWidth = 64;
+  textureHeight = 64;
+
+  // loadObjFileData("./assets/f22.obj");
+  load_cube_mesh_data();
 }
 
 void handleInput()
@@ -68,6 +73,14 @@ void handleInput()
       {
         renderMethod = RENDER_FILL_TRIANGLE_WIRE;
       }
+      if (event.key.keysym.sym == SDLK_5)
+      {
+        renderMethod = RENDER_TEXTURED;
+      }
+      if (event.key.keysym.sym == SDLK_6)
+      {
+        renderMethod = RENDER_TEXTURED_WIRE;
+      }
       if (event.key.keysym.sym == SDLK_c)
       {
         cullMethod = CULL_BACKFACE;
@@ -96,8 +109,8 @@ void update()
   trianglesToRender = NULL;
 
   mesh.rotation.x += 0.01;
-  // mesh.rotation.y += 0.03;
-  // mesh.rotation.z += 0.04;
+  mesh.rotation.y += 0.03;
+  mesh.rotation.z += 0.04;
   
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
@@ -187,7 +200,13 @@ void update()
             {projectedPoints[2].x, projectedPoints[2].y},
         },
         .color = triangleColor,
-        .avgDepth = avgDepth};
+        .avgDepth = avgDepth,
+        .texCoords = {
+          { meshFace.uvA.u, meshFace.uvA.v},
+          { meshFace.uvB.u, meshFace.uvB.v},
+          { meshFace.uvC.u, meshFace.uvC.v}
+        }
+    };
 
     array_push(trianglesToRender, projectedTriangle);
   }
@@ -225,7 +244,17 @@ void render()
           triangle.color);
     }
 
-    if (renderMethod == RENDER_WIRE || renderMethod == RENDER_WIRE_VERTEX || renderMethod == RENDER_FILL_TRIANGLE_WIRE)
+    if(renderMethod == RENDER_TEXTURED || renderMethod == RENDER_TEXTURED_WIRE)
+    {
+      drawTexturedTriangle(
+          triangle.points[0].x, triangle.points[0].y, triangle.texCoords[0].u, triangle.texCoords[0].v,
+          triangle.points[1].x, triangle.points[1].y, triangle.texCoords[1].u, triangle.texCoords[1].v,
+          triangle.points[2].x, triangle.points[2].y, triangle.texCoords[2].u, triangle.texCoords[2].v,
+          meshTexture
+      );
+    }
+
+    if (renderMethod == RENDER_WIRE || renderMethod == RENDER_WIRE_VERTEX || renderMethod == RENDER_FILL_TRIANGLE_WIRE || renderMethod == RENDER_TEXTURED_WIRE)
     {
       drawTriangle(
           triangle.points[0].x, triangle.points[0].y,

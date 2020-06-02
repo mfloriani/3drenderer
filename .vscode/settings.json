@@ -1,5 +1,8 @@
 {
   "files.associations": {
-    "cmath": "c"
+    "cmath": "c",
+    "*.tcc": "c",
+    "cinttypes": "c",
+    "cstdlib": "c"
   }
 }
