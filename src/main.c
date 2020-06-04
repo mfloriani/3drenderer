@@ -10,6 +10,7 @@
 #include "matrix.h"
 #include "light.h"
 #include "texture.h"
+#include "upng.h"
 
 triangle_t *trianglesToRender = NULL;
 
@@ -25,7 +26,7 @@ bool setup()
   cullMethod = CULL_BACKFACE;
 
   _colorBuffer = (uint32_t *)malloc(sizeof(uint32_t) * screenWidth * screenHeight);
-  _colorBufferTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, screenWidth, screenHeight);
+  _colorBufferTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, screenWidth, screenHeight);
 
   float fov = M_PI/3; // 180/3 or 60deg
   float aspect = (float)screenHeight / (float)screenWidth;
@@ -33,12 +34,9 @@ bool setup()
   float zfar = 100.0;
   projectionMatrix = mat4_makePerspective(fov, aspect, znear, zfar);
 
-  meshTexture = (uint32_t*)REDBRICK_TEXTURE;
-  textureWidth = 64;
-  textureHeight = 64;
-
-  // loadObjFileData("./assets/f22.obj");
+  //loadObjFileData("./assets/f22.obj");
   load_cube_mesh_data();
+  //load_png_texture_data("./assets/cube.png");
 }
 
 void handleInput()
@@ -108,9 +106,9 @@ void update()
 
   trianglesToRender = NULL;
 
-  mesh.rotation.x += 0.01;
-  mesh.rotation.y += 0.03;
-  mesh.rotation.z += 0.04;
+  // mesh.rotation.x += 0.01;
+  mesh.rotation.y += 0.01;
+  // mesh.rotation.z += 0.04;
   
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
@@ -279,6 +277,7 @@ void render()
 
 void freeResources()
 {
+  upng_free(pngTexture);
   free(_colorBuffer);
   array_free(mesh.faces);
   array_free(mesh.vertices);
