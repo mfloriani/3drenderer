@@ -45,10 +45,11 @@ vec3_t vec3Div(vec3_t v, float factor);
 vec3_t vec3Cross(vec3_t a, vec3_t b);
 float vec3Dot(vec3_t a, vec3_t b);
 vec3_t vec3Normalize(vec3_t v);
+
+// VECTOR CONVERSION
+
+vec2_t vec2_fromVec4(vec4_t v);
 vec3_t vec3_fromVec4(vec4_t v);
-
-// 4D VECTOR
-
 vec4_t vec4_fromVec3(vec3_t v);
 
 

@@ -47,6 +47,8 @@ vec2_t vec2Normalize(vec2_t v)
   return result;
 }
 
+
+
 //3D VECTOR 
 
 vec3_t vec3RotateX(vec3_t v, float angle)
@@ -132,13 +134,23 @@ vec3_t vec3Normalize(vec3_t v)
   return result;
 }
 
+
+// VECTOR CONVERSION
+
+vec2_t vec2_fromVec4(vec4_t v)
+{
+  vec2_t result = {
+    .x = v.x,
+    .y = v.y
+  };
+  return result;
+}
+
 vec3_t vec3_fromVec4(vec4_t v)
 {
   vec3_t result = { v.x, v.y, v.z};
   return result;
 }
-
-//4D VECTOR
 
 vec4_t vec4_fromVec3(vec3_t v)
 {

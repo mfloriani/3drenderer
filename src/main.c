@@ -195,9 +195,9 @@ void update()
 
     triangle_t projectedTriangle = {
         .points = {
-            {projectedPoints[0].x, projectedPoints[0].y},
-            {projectedPoints[1].x, projectedPoints[1].y},
-            {projectedPoints[2].x, projectedPoints[2].y},
+            { projectedPoints[0].x, projectedPoints[0].y, projectedPoints[0].z, projectedPoints[0].w },
+            { projectedPoints[1].x, projectedPoints[1].y, projectedPoints[1].z, projectedPoints[1].w },
+            { projectedPoints[2].x, projectedPoints[2].y, projectedPoints[2].z, projectedPoints[2].w }
         },
         .color = triangleColor,
         .avgDepth = avgDepth,
@@ -247,9 +247,9 @@ void render()
     if(renderMethod == RENDER_TEXTURED || renderMethod == RENDER_TEXTURED_WIRE)
     {
       drawTexturedTriangle(
-          triangle.points[0].x, triangle.points[0].y, triangle.texCoords[0].u, triangle.texCoords[0].v,
-          triangle.points[1].x, triangle.points[1].y, triangle.texCoords[1].u, triangle.texCoords[1].v,
-          triangle.points[2].x, triangle.points[2].y, triangle.texCoords[2].u, triangle.texCoords[2].v,
+          triangle.points[0].x, triangle.points[0].y, triangle.points[0].z, triangle.points[0].w, triangle.texCoords[0].u, triangle.texCoords[0].v,
+          triangle.points[1].x, triangle.points[1].y, triangle.points[1].z, triangle.points[1].w, triangle.texCoords[1].u, triangle.texCoords[1].v,
+          triangle.points[2].x, triangle.points[2].y, triangle.points[2].z, triangle.points[2].w, triangle.texCoords[2].u, triangle.texCoords[2].v,
           meshTexture
       );
     }
