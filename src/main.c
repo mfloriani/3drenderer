@@ -11,16 +11,19 @@
 #include "light.h"
 #include "texture.h"
 #include "upng.h"
+#include "camera.h"
 
 #define MAX_TRIANGLES_PER_MESH 10000
 triangle_t trianglesToRender[MAX_TRIANGLES_PER_MESH];
 int numTrianglesToRender = 0;
 
-vec3_t cameraPosition = {0, 0, 0};
+mat4_t worldMatrix;
 mat4_t projectionMatrix;
+mat4_t viewMatrix;
 
 bool _running = true;
 int previousFrameTime = 0;
+float deltaTime = 0;
 
 bool setup()
 {
@@ -38,8 +41,8 @@ bool setup()
   float zfar = 100.0;
   projectionMatrix = mat4_makePerspective(fov, aspect, znear, zfar);
 
-  loadObjFileData("./assets/drone.obj");
-  load_png_texture_data("./assets/drone.png");
+  loadObjFileData("./assets/cube.obj");
+  load_png_texture_data("./assets/cube.png");
 }
 
 void handleInput()
@@ -55,41 +58,42 @@ void handleInput()
 
     case SDL_KEYDOWN:
       if (event.key.keysym.sym == SDLK_ESCAPE)
-      {
         _running = false;
-      }
       if (event.key.keysym.sym == SDLK_1)
-      {
         renderMethod = RENDER_WIRE_VERTEX;
-      }
       if (event.key.keysym.sym == SDLK_2)
-      {
         renderMethod = RENDER_WIRE;
-      }
       if (event.key.keysym.sym == SDLK_3)
-      {
         renderMethod = RENDER_FILL_TRIANGLE;
-      }
       if (event.key.keysym.sym == SDLK_4)
-      {
         renderMethod = RENDER_FILL_TRIANGLE_WIRE;
-      }
       if (event.key.keysym.sym == SDLK_5)
-      {
         renderMethod = RENDER_TEXTURED;
-      }
       if (event.key.keysym.sym == SDLK_6)
-      {
         renderMethod = RENDER_TEXTURED_WIRE;
-      }
       if (event.key.keysym.sym == SDLK_c)
-      {
         cullMethod = CULL_BACKFACE;
-      }
-      if (event.key.keysym.sym == SDLK_d)
-      {
+      if (event.key.keysym.sym == SDLK_v)
         cullMethod = CULL_NONE;
+      if (event.key.keysym.sym == SDLK_w)
+      {
+        camera.forwardVelocity = vec3Mul(camera.direction, 5.0 * deltaTime);
+        camera.position = vec3Add(camera.position, camera.forwardVelocity);
       }
+      if (event.key.keysym.sym == SDLK_s)
+      {
+        camera.forwardVelocity = vec3Mul(camera.direction, 5.0 * deltaTime);
+        camera.position = vec3Sub(camera.position, camera.forwardVelocity);
+      }
+      if (event.key.keysym.sym == SDLK_a)
+        camera.yawAngle += 1.0 * deltaTime;
+      if (event.key.keysym.sym == SDLK_d)
+        camera.yawAngle -= 1.0 * deltaTime;
+      if (event.key.keysym.sym == SDLK_q)
+        camera.position.y += 3.0 * deltaTime;
+      if (event.key.keysym.sym == SDLK_e)
+        camera.position.y -= 3.0 * deltaTime;
+        
       break;
 
     default:
@@ -105,19 +109,31 @@ void update()
   {
     SDL_Delay(timeToWait);
   }
+  deltaTime = (SDL_GetTicks() - previousFrameTime) / 1000.0;
   previousFrameTime = SDL_GetTicks();
 
   numTrianglesToRender = 0;
 
-  // mesh.rotation.x += 0.01;
-  mesh.rotation.y += 0.01;
-  // mesh.rotation.z += 0.01;
+  // mesh.rotation.x += 0.01 * deltaTime;
+  // mesh.rotation.y += 0.01 * deltaTime;
+  // mesh.rotation.z += 0.01 * deltaTime;
   
-  // mesh.scale.x += 0.002;
-  // mesh.scale.y += 0.001;
+  // mesh.scale.x += 0.002 * deltaTime;
+  // mesh.scale.y += 0.001 * deltaTime;
 
-  // mesh.translation.x += 0.01;
-  mesh.translation.z = 5;
+  // mesh.translation.x += 0.01 * deltaTime;
+  mesh.translation.z = 10.0;
+
+  // camera.position.x += 0.5 * deltaTime;
+  // camera.position.y += 0.5 * deltaTime;
+
+  
+  vec3_t up = { 0, 1, 0 };
+  vec3_t target = { 0, 0, 1};
+  mat4_t cameraYawRotation = mat4_makeRotationY(camera.yawAngle);
+  camera.direction = vec3_fromVec4( mat4_mulVec4(cameraYawRotation, vec4_fromVec3(target)) );
+  target = vec3Add(camera.position, camera.direction);
+  mat4_t viewMatrix = mat4_lookAt(camera.position, target, up);
   
   mat4_t scaleMatrix = mat4_makeScale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
   mat4_t translationMatrix = mat4_makeTranslation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
@@ -140,7 +156,7 @@ void update()
     {
       vec4_t transformedVertex = vec4_fromVec3(faceVertices[j]);
       
-      mat4_t worldMatrix = mat4_identity();
+      worldMatrix = mat4_identity();
       worldMatrix = mat4_mulMat4(scaleMatrix, worldMatrix);
       worldMatrix = mat4_mulMat4(rotationMatrixX, worldMatrix);
       worldMatrix = mat4_mulMat4(rotationMatrixY, worldMatrix);
@@ -148,6 +164,7 @@ void update()
       worldMatrix = mat4_mulMat4(translationMatrix, worldMatrix);      
 
       transformedVertex = mat4_mulVec4(worldMatrix, transformedVertex);
+      transformedVertex = mat4_mulVec4(viewMatrix, transformedVertex);
       transformedVertices[j] = transformedVertex;
     }
   
@@ -164,7 +181,8 @@ void update()
     vec3_t normal = vec3Cross(vecAB, vecAC);
     normal = vec3Normalize(normal);
 
-    vec3_t cameraRay = vec3Sub(cameraPosition, vecA);
+    vec3_t origin = {0, 0, 0};
+    vec3_t cameraRay = vec3Sub(vec3Sub(origin, camera.position), vecA);
 
     float dotNormalCamera = vec3Dot(normal, cameraRay);
 
