@@ -16,6 +16,8 @@ void loadObjFileData(char* filename)
   FILE* file = fopen(filename, "r");
   
   char line[1024];
+  tex2_t* texcoords = NULL;
+
   while(fgets(line, 1024, file))
   {
     if(strncmp(line, "v ", 2) == 0)
@@ -24,6 +26,14 @@ void loadObjFileData(char* filename)
       sscanf(line, "v %f %f %f", &vertex.x, &vertex.y, &vertex.z);
       array_push(mesh.vertices, vertex);
     }
+
+    if(strncmp(line, "vt ", 3) == 0)
+    {
+      tex2_t texcoord;
+      sscanf(line, "vt %f %f", &texcoord.u, &texcoord.v);
+      array_push(texcoords, texcoord);
+    }
+
     if(strncmp(line, "f ", 2) == 0)
     {
       int vertexIndeces[3];
@@ -36,14 +46,18 @@ void loadObjFileData(char* filename)
       );
 
       face_t face = {
-        .a = vertexIndeces[0],
-        .b = vertexIndeces[1],
-        .c = vertexIndeces[2],
+        .a = vertexIndeces[0] - 1,
+        .b = vertexIndeces[1] - 1,
+        .c = vertexIndeces[2] - 1,
+        .uvA = texcoords[ textureIndeces[0] - 1 ],
+        .uvB = texcoords[ textureIndeces[1] - 1],
+        .uvC = texcoords[ textureIndeces[2] - 1 ],
         .color = 0xffffffff
       };
       array_push(mesh.faces, face);
     }
   }
+  array_free(texcoords);
 }
 
 vec3_t cube_vertices[N_CUBE_VERTICES] = {

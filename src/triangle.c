@@ -167,6 +167,12 @@ void drawTexturedTriangle(
     floatSwap(&v0, &v1);
   }
 
+  //flip V to account for inverted UV
+  v0 = 1.0 - v0;
+  v1 = 1.0 - v1;
+  v2 = 1.0 - v2;
+
+
   vec4_t pointA = { x0, y0, z0, w0 };
   vec4_t pointB = { x1, y1, z1, w1 };
   vec4_t pointC = { x2, y2, z2, w2 };

@@ -34,9 +34,8 @@ bool setup()
   float zfar = 100.0;
   projectionMatrix = mat4_makePerspective(fov, aspect, znear, zfar);
 
-  //loadObjFileData("./assets/f22.obj");
-  load_cube_mesh_data();
-  //load_png_texture_data("./assets/cube.png");
+  loadObjFileData("./assets/cube.obj");
+  load_png_texture_data("./assets/cube.png");
 }
 
 void handleInput()
@@ -107,14 +106,14 @@ void update()
   trianglesToRender = NULL;
 
   // mesh.rotation.x += 0.01;
-  mesh.rotation.y += 0.01;
+  //mesh.rotation.y += 0.01;
   // mesh.rotation.z += 0.04;
   
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
 
   // mesh.translation.x += 0.01;
-  mesh.translation.z = 5;
+  mesh.translation.z = 10;
   
   mat4_t scaleMatrix = mat4_makeScale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
   mat4_t translationMatrix = mat4_makeTranslation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
@@ -128,9 +127,9 @@ void update()
     face_t meshFace = mesh.faces[i];
 
     vec3_t faceVertices[3];
-    faceVertices[0] = mesh.vertices[meshFace.a - 1];
-    faceVertices[1] = mesh.vertices[meshFace.b - 1];
-    faceVertices[2] = mesh.vertices[meshFace.c - 1];
+    faceVertices[0] = mesh.vertices[meshFace.a];
+    faceVertices[1] = mesh.vertices[meshFace.b];
+    faceVertices[2] = mesh.vertices[meshFace.c];
 
     vec4_t transformedVertices[3];
     for (int j = 0; j < 3; ++j)
