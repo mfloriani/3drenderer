@@ -12,7 +12,9 @@
 #include "texture.h"
 #include "upng.h"
 
-triangle_t *trianglesToRender = NULL;
+#define MAX_TRIANGLES_PER_MESH 10000
+triangle_t trianglesToRender[MAX_TRIANGLES_PER_MESH];
+int numTrianglesToRender = 0;
 
 vec3_t cameraPosition = {0, 0, 0};
 mat4_t projectionMatrix;
@@ -28,14 +30,16 @@ bool setup()
   _colorBuffer = (uint32_t *)malloc(sizeof(uint32_t) * screenWidth * screenHeight);
   _colorBufferTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, screenWidth, screenHeight);
 
+  zBuffer = (float*) malloc(sizeof(float) * screenWidth * screenHeight);
+
   float fov = M_PI/3; // 180/3 or 60deg
   float aspect = (float)screenHeight / (float)screenWidth;
   float znear = 0.1;
   float zfar = 100.0;
   projectionMatrix = mat4_makePerspective(fov, aspect, znear, zfar);
 
-  loadObjFileData("./assets/cube.obj");
-  load_png_texture_data("./assets/cube.png");
+  loadObjFileData("./assets/drone.obj");
+  load_png_texture_data("./assets/drone.png");
 }
 
 void handleInput()
@@ -103,17 +107,17 @@ void update()
   }
   previousFrameTime = SDL_GetTicks();
 
-  trianglesToRender = NULL;
+  numTrianglesToRender = 0;
 
   // mesh.rotation.x += 0.01;
-  //mesh.rotation.y += 0.01;
-  // mesh.rotation.z += 0.04;
+  mesh.rotation.y += 0.01;
+  // mesh.rotation.z += 0.01;
   
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
 
   // mesh.translation.x += 0.01;
-  mesh.translation.z = 10;
+  mesh.translation.z = 5;
   
   mat4_t scaleMatrix = mat4_makeScale(mesh.scale.x, mesh.scale.y, mesh.scale.z);
   mat4_t translationMatrix = mat4_makeTranslation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
@@ -184,8 +188,6 @@ void update()
       projectedPoints[j].y += (screenHeight / 2.0);
     }
 
-    float avgDepth = (transformedVertices[0].z + transformedVertices[1].z + transformedVertices[2].z) / 3.0;
-
     float lightIntensityFactor = -vec3Dot(normal, light.direction);
 
     uint32_t triangleColor = light_applyIntensity(meshFace.color, lightIntensityFactor);
@@ -197,7 +199,6 @@ void update()
             { projectedPoints[2].x, projectedPoints[2].y, projectedPoints[2].z, projectedPoints[2].w }
         },
         .color = triangleColor,
-        .avgDepth = avgDepth,
         .texCoords = {
           { meshFace.uvA.u, meshFace.uvA.v},
           { meshFace.uvB.u, meshFace.uvB.v},
@@ -205,39 +206,28 @@ void update()
         }
     };
 
-    array_push(trianglesToRender, projectedTriangle);
-  }
-
-  int numTriangles = array_length(trianglesToRender);
-  for (int i = 0; i < numTriangles; ++i)
-  {
-    for (int j = i; j < numTriangles; ++j)
+    if(numTrianglesToRender < MAX_TRIANGLES_PER_MESH)
     {
-      if (trianglesToRender[i].avgDepth < trianglesToRender[j].avgDepth)
-      {
-        triangle_t tmp = trianglesToRender[i];
-        trianglesToRender[i] = trianglesToRender[j];
-        trianglesToRender[j] = tmp;
-      }
+      trianglesToRender[numTrianglesToRender++] = projectedTriangle;
     }
   }
+
 }
 
 void render()
 {
   SDL_RenderClear(_renderer);
 
-  int numTriangles = array_length(trianglesToRender);
-  for (int i = 0; i < numTriangles; ++i)
+  for (int i = 0; i < numTrianglesToRender; ++i)
   {
     triangle_t triangle = trianglesToRender[i];
 
     if (renderMethod == RENDER_FILL_TRIANGLE || renderMethod == RENDER_FILL_TRIANGLE_WIRE)
     {
       drawFilledTriangle(
-          triangle.points[0].x, triangle.points[0].y,
-          triangle.points[1].x, triangle.points[1].y,
-          triangle.points[2].x, triangle.points[2].y,
+          triangle.points[0].x, triangle.points[0].y, triangle.points[0].z, triangle.points[0].w,
+          triangle.points[1].x, triangle.points[1].y, triangle.points[1].z, triangle.points[1].w,
+          triangle.points[2].x, triangle.points[2].y, triangle.points[2].z, triangle.points[2].w,
           triangle.color);
     }
 
@@ -268,16 +258,17 @@ void render()
     }
   }
 
-  array_free(trianglesToRender);
   renderColorBuffer();
   clearColorBuffer(0xff000000);
+  clearZBuffer();
   SDL_RenderPresent(_renderer);
 }
 
 void freeResources()
 {
-  upng_free(pngTexture);
   free(_colorBuffer);
+  free(zBuffer);
+  upng_free(pngTexture);
   array_free(mesh.faces);
   array_free(mesh.vertices);
 }

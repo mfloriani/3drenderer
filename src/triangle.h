@@ -18,11 +18,16 @@ typedef struct
   vec4_t points[3];
   tex2_t texCoords[3];
   uint32_t color;
-  float avgDepth;
 } triangle_t;
 
 void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
-void drawFilledTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
+
+void drawFilledTriangle(
+  int x0, int y0, float z0, float w0, 
+  int x1, int y1, float z1, float w1, 
+  int x2, int y2, float z2, float w2, 
+  uint32_t color
+);
 
 void drawTexel(
   int x, int y, uint32_t* texture, 
